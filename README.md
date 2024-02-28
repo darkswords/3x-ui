@@ -27,10 +27,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.
 
 ## Install Custom Version
 
-To install your desired version, add the version to the end of the installation command. e.g., ver `v2.2.0`:
+To install your desired version, add the version to the end of the installation command. e.g., ver `v2.2.1`:
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.2.0
+bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.2.1
 ```
 
 ## SSL Certificate
@@ -214,6 +214,7 @@ Our platform offers compatibility with a diverse range of architectures and devi
 - Vietnamese
 - Spanish
 - Indonesian 
+- Ukrainian
 
 
 ## Features
