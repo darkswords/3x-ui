@@ -40,10 +40,14 @@ os_version=$(grep -i version_id /etc/os-release | cut -d \" -f2 | cut -d . -f1)
 
 if [[ "${release}" == "arch" ]]; then
     echo "Your OS is Arch Linux"
+elif [[ "${release}" == "parch" ]]; then
+    echo "Your OS is Parch linux"
 elif [[ "${release}" == "manjaro" ]]; then
     echo "Your OS is Manjaro"
 elif [[ "${release}" == "armbian" ]]; then
     echo "Your OS is Armbian"
+elif [[ "${release}" == "opensuse-tumbleweed" ]]; then
+    echo "Your OS is OpenSUSE Tumbleweed"
 elif [[ "${release}" == "centos" ]]; then
     if [[ ${os_version} -lt 8 ]]; then
         echo -e "${red} Please use CentOS 8 or higher ${plain}\n" && exit 1
@@ -80,11 +84,13 @@ else
     echo "- CentOS 8+"
     echo "- Fedora 36+"
     echo "- Arch Linux"
+    echo "- Parch Linux"
     echo "- Manjaro"
     echo "- Armbian"
     echo "- AlmaLinux 9+"
     echo "- Rocky Linux 9+"
     echo "- Oracle Linux 8+"
+    echo "- OpenSUSE Tumbleweed"
     exit 1
 
 fi
@@ -591,8 +597,9 @@ open_ports() {
 
     # Check if the firewall is inactive
     if ufw status | grep -q "Status: active"; then
-        echo "firewall is already active"
+        echo "Firewall is already active"
     else
+        echo "Activating firewall..."
         # Open the necessary ports
         ufw allow ssh
         ufw allow http
@@ -619,17 +626,19 @@ open_ports() {
             # Split the range into start and end ports
             start_port=$(echo $port | cut -d'-' -f1)
             end_port=$(echo $port | cut -d'-' -f2)
-            # Loop through the range and open each port
-            for ((i = start_port; i <= end_port; i++)); do
-                ufw allow $i
-            done
+            ufw allow $start_port:$end_port/tcp
+            ufw allow $start_port:$end_port/udp
         else
             ufw allow "$port"
         fi
     done
 
     # Confirm that the ports are open
-    ufw status | grep $ports
+    echo "The following ports are now open:"
+    ufw status | grep "ALLOW" | grep -Eo "[0-9]+(/[a-z]+)?"
+
+    echo "Firewall status:"
+    ufw status verbose
 }
 
 delete_ports() {
@@ -649,18 +658,28 @@ delete_ports() {
             # Split the range into start and end ports
             start_port=$(echo $port | cut -d'-' -f1)
             end_port=$(echo $port | cut -d'-' -f2)
-            # Loop through the range and delete each port
-            for ((i = start_port; i <= end_port; i++)); do
-                ufw delete allow $i
-            done
+            # Delete the port range
+            ufw delete allow $start_port:$end_port/tcp
+            ufw delete allow $start_port:$end_port/udp
         else
             ufw delete allow "$port"
         fi
     done
 
     # Confirm that the ports are deleted
+    
     echo "Deleted the specified ports:"
-    ufw status | grep $ports
+    for port in "${PORT_LIST[@]}"; do
+        if [[ $port == *-* ]]; then
+            start_port=$(echo $port | cut -d'-' -f1)
+            end_port=$(echo $port | cut -d'-' -f2)
+            # Check if the port range has been successfully deleted
+            (ufw status | grep -q "$start_port:$end_port") || echo "$start_port-$end_port"
+        else
+            # Check if the individual port has been successfully deleted
+            (ufw status | grep -q "$port") || echo "$port"
+        fi
+    done
 }
 
 update_geo() {
